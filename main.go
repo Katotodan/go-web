@@ -43,6 +43,7 @@ func main() {
 	r.HandleFunc("/delete-table/{tableName}", controller.DropTable).Methods("DELETE")
 	r.HandleFunc("/all/table", controller.GetAllTable).Methods("GET")
 	r.HandleFunc("/insert/user", controller.InsertUser).Methods("POST")
+	r.HandleFunc("/user/{table}/{id}", controller.GetUserData).Methods("GET")
 
 	http.ListenAndServe(":3000", r)
 }

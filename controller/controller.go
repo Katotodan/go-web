@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Katotodan/go-web/db"
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CreateTableRequest struct {
@@ -113,6 +115,16 @@ func GetAllTable(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+func hashPasswordFunc(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
 
 func InsertUser(w http.ResponseWriter, r *http.Request) {
 
@@ -122,12 +134,19 @@ func InsertUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hassPassword, err := hashPasswordFunc(userData.Password)
+
+	if err != nil {
+		http.Error(w, "Something went wrong, failed to hash the password", http.StatusInternalServerError)
+		return
+	}
+
 	query := fmt.Sprintf(`
 		INSERT INTO %s (username, password, created_at) VALUES (?, ?, NOW())
 	
 	`, userData.Table)
 
-	result, err := db.Database.Exec(query, userData.Username, userData.Password)
+	result, err := db.Database.Exec(query, userData.Username, hassPassword)
 	if err != nil {
 		http.Error(w, "Insertion failed", http.StatusInternalServerError)
 		return
@@ -144,6 +163,41 @@ func InsertUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":     "Success",
 		"insertedId": userID,
+	})
+
+}
+
+func GetUserData(w http.ResponseWriter, r *http.Request) {
+	user := mux.Vars(r)
+	userId := user["id"]
+	table := user["table"]
+
+	var (
+		id        int
+		username  string
+		password  string
+		createdAt time.Time
+	)
+
+	query := fmt.Sprintf(`
+	    SELECT id, username, password, created_at FROM %s WHERE id = ?
+	`, table)
+
+	err := db.Database.QueryRow(query, userId).Scan(&id, &username, &password, &createdAt)
+
+	if err != nil {
+		http.Error(w, "Failed to get user", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":    "Success",
+		"id":        id,
+		"username":  username,
+		"password":  password,
+		"createdAt": createdAt,
 	})
 
 }
