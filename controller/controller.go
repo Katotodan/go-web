@@ -242,3 +242,25 @@ func GetAllUser(w http.ResponseWriter, r *http.Request) {
 		"users":  users,
 	})
 }
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	table := vars["table"]
+
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", table)
+
+	_, err := db.Database.Exec(query, id)
+	if err != nil {
+		http.Error(w, "Failed to delete user", http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "Success",
+		"id":      id,
+		"message": "User deleted successfully",
+	})
+
+}

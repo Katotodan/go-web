@@ -45,6 +45,7 @@ func main() {
 	r.HandleFunc("/insert/user", controller.InsertUser).Methods("POST")
 	r.HandleFunc("/user/{table}/{id}", controller.GetUserData).Methods("GET")
 	r.HandleFunc("/all/users/{table}", controller.GetAllUser).Methods("GET")
+	r.HandleFunc("/delete/{table}/{id}", controller.DeleteUser).Methods("DELETE")
 
 	http.ListenAndServe(":3000", r)
 }
