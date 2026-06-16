@@ -24,7 +24,8 @@ A small Go web app demonstrating a MySQL-backed HTTP server with basic routing, 
 ## Run locally
 
 ```bash
-cd /Users/danielkatoto/Desktop/go-web
+git clone https://github.com/Katotodan/go-web.git
+cd go-web
 go run main.go
 ```
 
