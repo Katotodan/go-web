@@ -47,5 +47,12 @@ func main() {
 	r.HandleFunc("/all/users/{table}", controller.GetAllUser).Methods("GET")
 	r.HandleFunc("/delete/{table}/{id}", controller.DeleteUser).Methods("DELETE")
 
+	r.HandleFunc("/foo", controller.Logging(controller.Foo))
+	r.HandleFunc("/bar", controller.Logging(controller.Bar))
+
+	r.HandleFunc("/secret", controller.Secret)
+	r.HandleFunc("/login", controller.Login)
+	r.HandleFunc("/logout", controller.Logout)
+
 	http.ListenAndServe(":3000", r)
 }
