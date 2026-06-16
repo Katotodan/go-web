@@ -19,6 +19,11 @@ type User struct {
 	Password string `json:"password"`
 	Table    string `json:"table"`
 }
+type ListOfUser struct {
+	Id        string
+	UserName  string
+	CreatedAt time.Time
+}
 
 func CreateTable(w http.ResponseWriter, r *http.Request) {
 
@@ -175,15 +180,14 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 	var (
 		id        int
 		username  string
-		password  string
 		createdAt time.Time
 	)
 
 	query := fmt.Sprintf(`
-	    SELECT id, username, password, created_at FROM %s WHERE id = ?
+	    SELECT id, username, created_at FROM %s WHERE id = ?
 	`, table)
 
-	err := db.Database.QueryRow(query, userId).Scan(&id, &username, &password, &createdAt)
+	err := db.Database.QueryRow(query, userId).Scan(&id, &username, &createdAt)
 
 	if err != nil {
 		http.Error(w, "Failed to get user", http.StatusNotFound)
@@ -196,8 +200,45 @@ func GetUserData(w http.ResponseWriter, r *http.Request) {
 		"status":    "Success",
 		"id":        id,
 		"username":  username,
-		"password":  password,
 		"createdAt": createdAt,
 	})
 
+}
+
+func GetAllUser(w http.ResponseWriter, r *http.Request) {
+	var users []ListOfUser
+	vars := mux.Vars(r)
+	table := vars["table"]
+	query := fmt.Sprintf(`
+	    SELECT id, username, created_at FROM %s
+	`, table)
+
+	rows, err := db.Database.Query(query)
+	if err != nil {
+		http.Error(w, "Failed to get all users", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user ListOfUser
+		err := rows.Scan(&user.Id, &user.UserName, &user.CreatedAt)
+		if err != nil {
+			http.Error(w, "Failed to iterate over list of users", http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to iterate over list of users", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "Success",
+		"users":  users,
+	})
 }

@@ -39,11 +39,12 @@ func main() {
 	})
 
 	// Create table handler
-	r.HandleFunc("/new-table/", controller.CreateTable).Methods("POST")
-	r.HandleFunc("/delete-table/{tableName}", controller.DropTable).Methods("DELETE")
+	r.HandleFunc("/new/table", controller.CreateTable).Methods("POST")
+	r.HandleFunc("/delete/table/{tableName}", controller.DropTable).Methods("DELETE")
 	r.HandleFunc("/all/table", controller.GetAllTable).Methods("GET")
 	r.HandleFunc("/insert/user", controller.InsertUser).Methods("POST")
 	r.HandleFunc("/user/{table}/{id}", controller.GetUserData).Methods("GET")
+	r.HandleFunc("/all/users/{table}", controller.GetAllUser).Methods("GET")
 
 	http.ListenAndServe(":3000", r)
 }
